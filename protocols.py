@@ -4,56 +4,45 @@ from gpiozero import LED
 from time import sleep
 import paho.mqtt.client as mqtt
 
-try:
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-except:
-    client = mqtt.Client() # Fallback for older versions
 
-# pygame.mixer.init() # Commented out using #
 
-  
-# light = LED(17) 
+pygame.mixer.init()
 
-def start_protocol(animal_name): 
-    print(f"Checking animal: {animal_name}")
-    
+def run_logic(animal_name):
     if animal_name == "deer":
-        # sound_file = ""
-        print(">>> Protocol: Deer detected")
+        print("Deer detected")
     elif animal_name == "elephant":
-        # sound_file = ""
-        print(">>> Protocol: Elephant detected")
+        print("Elephant detected")
     elif animal_name == "wild_boar":
-        # sound_file = ""
-        print(">>> Protocol: Wild boar detected")
+        print("Wild boar detected")
     else:
-        print(f"Unknown animal: {animal_name}")
+        print("unknown animal")
         return
 
+    try:
+        # pygame.mixer.music.load("sound.mp3")
+        # pygame.mixer.music.play()
+        sleep(2) 
+    except:
+        pass
+
     display_message = f"ALARM ACTIVE: {animal_name.upper()} DETECTED!"
-    client.publish("alerts/display", display_message) 
-    print(f"Sent to website: {display_message}")
+    client.publish("alerts/display", display_message)
 
 def on_connect(client, userdata, flags, rc, properties=None):
-    if rc == 0:
-        print("CONNECTED TO BROKER SUCCESSFULLY")
-        # Subscribe to the topic YOLO will send to
-        client.subscribe("yolo/data")
-    else:
-        print(f"Connection failed with code {rc}")
+    client.subscribe("yolo/data")
 
 def on_message(client, userdata, msg):
     animal = msg.payload.decode().strip()
-    print(f"\nReceived message from MQTT: {animal}")
-    
-    t = threading.Thread(target=start_protocol, args=(animal,))
-    t.start()
+    threading.Thread(target=run_logic, args=(animal,)).start()
+
+try:
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+except:
+    client = mqtt.Client()
 
 client.on_connect = on_connect
 client.on_message = on_message
 
-print("Attempting to connect...")
 client.connect("broker.emqx.io", 1883, 60)
-
-# This keeps the script running
 client.loop_forever()
