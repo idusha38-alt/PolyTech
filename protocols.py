@@ -1,6 +1,5 @@
 import threading
 import pygame
-from gpiozero import LED
 from time import sleep
 import paho.mqtt.client as mqtt
 
